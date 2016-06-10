@@ -1,0 +1,5 @@
+pycrypto>=2.7a1
+pytest>=2.9.2
+coverage>=4.1
+pytest-cov>=2.2.1
+fastchunking>=0.0.1
