@@ -216,6 +216,11 @@ class CryptoWrapperTest(unittest.TestCase):
                           wrapped_value, digest, height + 1, not is_root)
 
     def test_AES_SIV_256(self):
+        try:
+            seccs.crypto_wrapper.AES_SIV_256
+        except AttributeError:
+            self.skipTest('AES-SIV support is missing.')
+        
         key = os.urandom(32)
         cw = seccs.crypto_wrapper.AES_SIV_256(key)
         key2 = os.urandom(32)
@@ -254,6 +259,11 @@ class CryptoWrapperTest(unittest.TestCase):
             '', cw.unwrap_value(wrapped_value, digest, height, is_root))
 
     def test_AES_SIV_256_DISTINGUISHED_ROOT(self):
+        try:
+            seccs.crypto_wrapper.AES_SIV_256
+        except AttributeError:
+            self.skipTest('AES-SIV support is missing.')
+            
         key = os.urandom(32)
         cw = seccs.crypto_wrapper.AES_SIV_256_DISTINGUISHED_ROOT(key)
         key2 = os.urandom(32)

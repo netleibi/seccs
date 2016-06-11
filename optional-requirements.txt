@@ -1,0 +1,2 @@
+pycrypto>=2.7a1
+-r requirements.txt

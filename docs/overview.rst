@@ -48,7 +48,7 @@ encryption is required), we could choose any suitable wrapper from
 
 Choice of `crypto wrapper` and instantiation of data structure:
    >>> import seccs
-   >>> crypto_wrapper = seccs.crypto_wrapper.AES_SIV_256(key)
+   >>> crypto_wrapper = seccs.crypto_wrapper.AES_SIV_256(key)  # install PyCrypto>=2.7a1 to use AES-SIV
    >>> seccs = seccs.SecCSLite(256, database, crypto_wrapper)  # 256 is the chunk size
 
 .. note::

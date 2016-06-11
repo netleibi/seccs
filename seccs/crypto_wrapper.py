@@ -14,8 +14,7 @@ import abc
 import hashlib
 import hmac
 import struct
-
-from Crypto.Cipher import AES
+import logging
 
 
 # format strings to encode parameters
@@ -277,131 +276,145 @@ class HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(HMAC_SHA_256):
         return value[:length] if height == 0 and length > -1 else value
 
 
-AES_MODE_SIV = AES.MODE_SIV
-AES_new_fn = AES.new
+try:
+    from Crypto.Cipher import AES
+    AES_MODE_SIV = AES.MODE_SIV
+except ImportError:
+    logging.getLogger(__name__).warn('PyCrypto is not available, disabling AES wrappers.')
+except AttributeError:
+    logging.getLogger(__name__).warn('Your PyCrypto version is too old, disabling '
+                                     'AES-SIV wrappers which depend on PyCrypto >= 2.7a1.')
+else:
+    AES_new_fn = AES.new
+    
+    
+    class AES_SIV_256(BaseCryptoWrapper):
+    
+        """AES-SIV-256 crypto wrapper.
+    
+        Provides confidentiality and authenticity for chunk tree nodes based on a
+        symmetric 32-bytes key specified during instantiation.
+    
+        Root nodes are handled identically to inner nodes at the same level.
 
-
-class AES_SIV_256(BaseCryptoWrapper):
-
-    """AES-SIV-256 crypto wrapper.
-
-    Provides confidentiality and authenticity for chunk tree nodes based on a
-    symmetric 32-bytes key specified during instantiation.
-
-    Root nodes are handled identically to inner nodes at the same level.
-
-    Nodes are represented as follows:
-        * value: AES-SIV-256(<key>, <value>, additional_data=<height>)
-        * digest: <digest produced by AES-SIV-256>
-
-    Args:
-        key (str): Cryptographic key used for symmetric encryption and
-            authentication.
-    """
-
-    DIGEST_SIZE = 16
-
-    def __init__(self, key):
-        super(AES_SIV_256, self).__init__()
-        self._key = key
-
-        """The AES-SIV implementation does not support encryption of empty
-        strings, so we represent empty-string nodes by a designated zero_digest
-        instead.
-        """
-        cipher = AES_new_fn(self._key, AES_MODE_SIV)
-        cipher.update('empty_additional_data')
-        _, self._zero_digest = cipher.encrypt_and_digest('empty_string')
-        self._zero_digest = '\x00' * AES_SIV_256.DIGEST_SIZE
-
-    def wrap_value(self, value, height, is_root):
-        """Encrypts node representation using deterministic authenticated
-        encryption, i.e., with AES in SIV mode, including node height as
-        additional data that is authenticated, resulting in a digest (MAC)
-        that is used as `digest` and a ciphertext that is used as `value`.
+        Nodes are represented as follows:
+            * value: AES-SIV-256(<key>, <value>, additional_data=<height>)
+            * digest: <digest produced by AES-SIV-256>
+    
+        Args:
+            key (str): Cryptographic key used for symmetric encryption and
+                authentication.
 
         Note:
-            As AES-SIV cannot encrypt empty contents, a distinguished zero
-            digest is artifically assigned to empty node representations
+            Requires PyCrypto >= 2.7a1.
+        """
+    
+        DIGEST_SIZE = 16
+    
+        def __init__(self, key):
+            super(AES_SIV_256, self).__init__()
+            self._key = key
+    
+            """The AES-SIV implementation does not support encryption of empty
+            strings, so we represent empty-string nodes by a designated zero_digest
             instead.
+            """
+            cipher = AES_new_fn(self._key, AES_MODE_SIV)
+            cipher.update('empty_additional_data')
+            _, self._zero_digest = cipher.encrypt_and_digest('empty_string')
+            self._zero_digest = '\x00' * AES_SIV_256.DIGEST_SIZE
+    
+        def wrap_value(self, value, height, is_root):
+            """Encrypts node representation using deterministic authenticated
+            encryption, i.e., with AES in SIV mode, including node height as
+            additional data that is authenticated, resulting in a digest (MAC)
+            that is used as `digest` and a ciphertext that is used as `value`.
+    
+            Note:
+                As AES-SIV cannot encrypt empty contents, a distinguished zero
+                digest is artifically assigned to empty node representations
+                instead.
+    
+            See :meth:`.BaseCryptoWrapper.wrap_value`.
+            """
+            if value == '':
+                return value, self._zero_digest
+            cipher = AES_new_fn(self._key, AES_MODE_SIV)
+            cipher.update(struct.pack(FORMAT_HEIGHT, height))
+            return cipher.encrypt_and_digest(value)
+    
+        def unwrap_value(self, value, digest, height, is_root, length=-1):
+            """Decrypts and verifies node representation and returns the result on
+            success.
+    
+            Raises:
+                AuthenticityError: If digest does not match.
+    
+            See :meth:`.BaseCryptoWrapper.unwrap_value`.
+            """
+            if value == '' and digest == self._zero_digest:
+                return value
+            cipher = AES_new_fn(self._key, AES_MODE_SIV)
+            cipher.update(struct.pack(FORMAT_HEIGHT, height))
+            try:
+                return cipher.decrypt_and_verify(value, digest)
+            except ValueError as e:
+                raise AuthenticityError(e)
+    
+    
+    class AES_SIV_256_DISTINGUISHED_ROOT(AES_SIV_256):
+    
+        """AES-SIV-256 crypto wrapper with distinguished root representation.
+    
+        Provides confidentiality and authenticity for chunk tree nodes based on a
+        symmetric 32-bytes key specified during instantiation.
+    
+        Root nodes are handled differently from inner nodes at the same level.
 
-        See :meth:`.BaseCryptoWrapper.wrap_value`.
+        Nodes are represented as follows:
+            * value: AES-SIV-256(<key>, <value>, additional_data=<height>||<is_root>)
+            * digest: <digest produced by AES-SIV-256>
+    
+        Args:
+            key (str): Cryptographic key used for symmetric encryption and
+                authentication.
+
+        Note:
+            Requires PyCrypto >= 2.7a1.
         """
-        if value == '':
-            return value, self._zero_digest
-        cipher = AES_new_fn(self._key, AES_MODE_SIV)
-        cipher.update(struct.pack(FORMAT_HEIGHT, height))
-        return cipher.encrypt_and_digest(value)
-
-    def unwrap_value(self, value, digest, height, is_root, length=-1):
-        """Decrypts and verifies node representation and returns the result on
-        success.
-
-        Raises:
-            AuthenticityError: If digest does not match.
-
-        See :meth:`.BaseCryptoWrapper.unwrap_value`.
-        """
-        if value == '' and digest == self._zero_digest:
-            return value
-        cipher = AES_new_fn(self._key, AES_MODE_SIV)
-        cipher.update(struct.pack(FORMAT_HEIGHT, height))
-        try:
-            return cipher.decrypt_and_verify(value, digest)
-        except ValueError as e:
-            raise AuthenticityError(e)
-
-
-class AES_SIV_256_DISTINGUISHED_ROOT(AES_SIV_256):
-
-    """AES-SIV-256 crypto wrapper with distinguished root representation.
-
-    Provides confidentiality and authenticity for chunk tree nodes based on a
-    symmetric 32-bytes key specified during instantiation.
-
-    Root nodes are handled differently from inner nodes at the same level.
-
-    Nodes are represented as follows:
-        * value: AES-SIV-256(<key>, <value>, additional_data=<height>||<is_root>)
-        * digest: <digest produced by AES-SIV-256>
-
-    Args:
-        key (str): Cryptographic key used for symmetric encryption and
-            authentication.
-    """
-
-    def __init__(self, key):
-        AES_SIV_256.__init__(self, key)
-
-    def wrap_value(self, value, height, is_root):
-        """Encrypts node representation using deterministic authenticated
-        encryption, i.e., with AES in SIV mode, including node height and
-        is_root flag as additional data that is authenticated, resulting in a
-        digest (MAC) that is used as `digest` and a ciphertext that is used as
-        `value`.
-
-        See :meth:`.AES_SIV_256.wrap_value`.
-        """
-        if value == '':
-            return value, self._zero_digest
-        cipher = AES_new_fn(self._key, AES_MODE_SIV)
-        cipher.update(struct.pack(FORMAT_HEIGHT_ISROOT, height, is_root))
-        return cipher.encrypt_and_digest(value)
-
-    def unwrap_value(self, value, digest, height, is_root, length=-1):
-        """Decrypts and verifies node representation and returns the result on
-        success.
-
-        Raises:
-            AuthenticityError: If digest does not match.
-
-        See :meth:`.BaseCryptoWrapper.unwrap_value`.
-        """
-        if value == '' and digest == self._zero_digest:
-            return value
-        cipher = AES_new_fn(self._key, AES_MODE_SIV)
-        cipher.update(struct.pack(FORMAT_HEIGHT_ISROOT, height, is_root))
-        try:
-            return cipher.decrypt_and_verify(value, digest)
-        except ValueError as e:
-            raise AuthenticityError(e)
+    
+        def __init__(self, key):
+            AES_SIV_256.__init__(self, key)
+    
+        def wrap_value(self, value, height, is_root):
+            """Encrypts node representation using deterministic authenticated
+            encryption, i.e., with AES in SIV mode, including node height and
+            is_root flag as additional data that is authenticated, resulting in a
+            digest (MAC) that is used as `digest` and a ciphertext that is used as
+            `value`.
+    
+            See :meth:`.AES_SIV_256.wrap_value`.
+            """
+            if value == '':
+                return value, self._zero_digest
+            cipher = AES_new_fn(self._key, AES_MODE_SIV)
+            cipher.update(struct.pack(FORMAT_HEIGHT_ISROOT, height, is_root))
+            return cipher.encrypt_and_digest(value)
+    
+        def unwrap_value(self, value, digest, height, is_root, length=-1):
+            """Decrypts and verifies node representation and returns the result on
+            success.
+    
+            Raises:
+                AuthenticityError: If digest does not match.
+    
+            See :meth:`.BaseCryptoWrapper.unwrap_value`.
+            """
+            if value == '' and digest == self._zero_digest:
+                return value
+            cipher = AES_new_fn(self._key, AES_MODE_SIV)
+            cipher.update(struct.pack(FORMAT_HEIGHT_ISROOT, height, is_root))
+            try:
+                return cipher.decrypt_and_verify(value, digest)
+            except ValueError as e:
+                raise AuthenticityError(e)

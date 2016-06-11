@@ -39,7 +39,7 @@ import struct
 import seccs.crypto_wrapper
 import seccs.rc
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 
 class UnsupportedChunkSizeError(Exception):

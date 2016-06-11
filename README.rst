@@ -18,6 +18,10 @@ Installation
 
    $ pip install seccs
 
+If you want to use AES-SIV encryption (you probably want!), you also need to install PyCrypto 2.7a1 which is not yet available in PyPI::
+
+	$ pip install https://ftp.dlitz.net/pub/dlitz/crypto/pycrypto/pycrypto-2.7a1.tar.gz
+
 Usage and Overview
 ------------------
 
@@ -67,7 +71,7 @@ encryption is required), we could choose any suitable wrapper from
 
 Choice of `crypto wrapper` and instantiation of data structure:
    >>> import seccs
-   >>> crypto_wrapper = seccs.crypto_wrapper.AES_SIV_256(key)
+   >>> crypto_wrapper = seccs.crypto_wrapper.AES_SIV_256(key)  # install PyCrypto>=2.7a1 to use AES-SIV
    >>> seccs = seccs.SecCSLite(256, database, crypto_wrapper)  # 256 is the chunk size
 
 .. note::
