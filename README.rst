@@ -2,6 +2,16 @@
 seccs --- the SECure Content Store
 ==================================
 
+.. image:: https://travis-ci.org/netleibi/seccs.svg?branch=master
+    :target: https://travis-ci.org/netleibi/seccs
+
+.. image:: https://badge.fury.io/py/seccs.svg
+    :target: https://badge.fury.io/py/seccs
+
+.. image:: https://readthedocs.org/projects/seccs/badge/?version=latest
+    :target: http://seccs.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
 What it is
 ----------
 
