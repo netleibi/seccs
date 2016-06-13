@@ -150,4 +150,5 @@ Furthermore, storage space is reclaimed completely when contents are removed:
 
 References:
     .. [LS16] Dominik Leibenger and Christoph Sorge (2016). sec-cs: Getting the
-       Most out of Untrusted Cloud Storage. arXiv preprint.
+       Most out of Untrusted Cloud Storage.
+       `arXiv:1606.03368 <http://arxiv.org/abs/1606.03368>`_
