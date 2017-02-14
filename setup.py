@@ -64,8 +64,8 @@ setup(
 
             'Operating System :: OS Independent',
 
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 3'
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.5'
     ],
 
     packages=['seccs'],
@@ -73,6 +73,6 @@ setup(
     install_requires=['fastchunking'],
 
     test_suite='seccs.test',
-    tests_require=['tox', 'pycrypto>=2.7a1'],
+    tests_require=['tox'],
     cmdclass={'test': Tox}
 )

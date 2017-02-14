@@ -32,6 +32,16 @@ If you want to use AES-SIV encryption (you probably want!), you also need to ins
 
 	$ pip install https://ftp.dlitz.net/pub/dlitz/crypto/pycrypto/pycrypto-2.7a1.tar.gz
 
+If you are using Python >=3.5, pip might fail to build the package `fastchunking`
+on which `seccs` depends. This is due to the latest `pybindgen` release on PyPI
+being incompatible to Python 3.5. To resolve this issue, install the latest
+`pybindgen` version from github before installing `seccs`:
+
+::
+
+	$ pip uninstall pybindgen
+    $ pip install git+https://github.com/gjcarneiro/pybindgen.git
+
 Usage and Overview
 ------------------
 
@@ -99,7 +109,7 @@ Choice of `crypto wrapper` and instantiation of data structure:
    sizes might be more suitable.
 
 We can now insert contents...
-   >>> content = "This is a test content."
+   >>> content = b"This is a test content."
    >>> digest = seccs.put_content(content)
    >>> repr(digest)
    '\x08,f+\xa74\xdc\x0f\xe5Oo\xcb;\x83\xb9T\x00\x00\x00\x00\x00\x00\x00\x17'
@@ -144,19 +154,19 @@ Clearly, the database grows if different contents are inserted. However, these
 costs are low if inserted contents are similar to existing ones.
 
 Only about 2.3 KiB are required to store another 1 MiB content with one byte changed:
-   >>> content3 = ''.join([content1[:512*1024], 'x', content1[512*1024+1:]])
+   >>> content3 = b''.join([content1[:512*1024], b'x', content1[512*1024+1:]])
    >>> digest3 = seccs.put_content(content3)
    >>> dbsize(database)
    1585395
 
 Costs are similar even if the identical parts are shifted...
-   >>> content4 = ''.join([content1[:512*1024], 'xyz', content1[512*1024+1:]])
+   >>> content4 = b''.join([content1[:512*1024], b'xyz', content1[512*1024+1:]])
    >>> digest4 = seccs.put_content(content4)
    >>> dbsize(database)
    1588010
 
 ...and deduplication is also performed if a content consists of parts of different existing contents:
-   >>> content5 = ''.join([content1, content3, content4])
+   >>> content5 = b''.join([content1, content3, content4])
    >>> digest5 = seccs.put_content(content5)
    >>> dbsize(database)
    1591009

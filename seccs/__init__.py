@@ -40,7 +40,7 @@ import struct
 import seccs.crypto_wrapper
 import seccs.rc
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 
 class UnsupportedChunkSizeError(Exception):
@@ -278,7 +278,7 @@ class SecCSLite(object):
             """ serialize superchunk:
                 use each key as is (and replace None keys by a sequence of zero
                 bytes) and concatenate everything """
-            serialized_chunk = ''.join([struct.pack(
+            serialized_chunk = b''.join([struct.pack(
                 self._subchunk_reference_format,
                 subchunk_key) for (subchunk_key,) in v])
 
@@ -436,7 +436,7 @@ class SecCSLite(object):
         for height in range(h, 0, -1):
             chunks = chain.from_iterable([self._get_node(k, height, root_h)
                                           for (k, ) in chunks])
-        return ''.join([self._get_node(k, 0, root_h) for (k, ) in chunks])
+        return b''.join([self._get_node(k, 0, root_h) for (k, ) in chunks])
 
     def _delete_content(self, k, h, root_h, l, ignore_rc=True):
         """ Remove reference from content's root node and delete its root node

@@ -255,7 +255,7 @@ class HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(HMAC_SHA_256):
         m = HMAC_new(self._key, digestmod=HASHLIB_SHA256)
         m.update(struct.pack(FORMAT_HEIGHT_ISROOT, height, is_root))
         if height == 0:
-            value += '\x00' * (HMAC_SHA_256_R - (len(value) % HMAC_SHA_256_R))
+            value += b'\x00' * (HMAC_SHA_256_R - (len(value) % HMAC_SHA_256_R))
         m.update(value)
         return value, m.digest()
 
@@ -320,9 +320,9 @@ else:
             instead.
             """
             cipher = AES_new_fn(self._key, AES_MODE_SIV)
-            cipher.update('empty_additional_data')
-            _, self._zero_digest = cipher.encrypt_and_digest('empty_string')
-            self._zero_digest = '\x00' * AES_SIV_256.DIGEST_SIZE
+            cipher.update(b'empty_additional_data')
+            _, self._zero_digest = cipher.encrypt_and_digest(b'empty_string')
+            self._zero_digest = b'\x00' * AES_SIV_256.DIGEST_SIZE
     
         def wrap_value(self, value, height, is_root):
             """Encrypts node representation using deterministic authenticated

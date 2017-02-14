@@ -8,15 +8,17 @@ If run directly, the tests are repeated with all seeds that triggered errors in
 the past. Note that this requires an extensive amount of time!
 """
 
+import functools
 import math
-import sys
 import os
+import sys
 import unittest
+
+import seccs
+
 
 # ensure that we include from the parent path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
-import seccs
 
 
 class RCTest(unittest.TestCase):
@@ -105,9 +107,9 @@ class CryptoWrapperTest(unittest.TestCase):
             value, cw.unwrap_value(wrapped_value, digest, height, is_root))
 
         self.assertRaises(seccs.crypto_wrapper.IntegrityError, cw.unwrap_value,
-                          wrapped_value + 'x', digest, height, is_root)
+                          wrapped_value + b'x', digest, height, is_root)
         self.assertRaises(seccs.crypto_wrapper.IntegrityError, cw.unwrap_value,
-                          wrapped_value, digest[:-3] + 'xyz', height, is_root)
+                          wrapped_value, digest[:-3] + b'xyz', height, is_root)
         self.assertRaises(seccs.crypto_wrapper.IntegrityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, is_root)
         try:
@@ -138,9 +140,9 @@ class CryptoWrapperTest(unittest.TestCase):
             value, cw.unwrap_value(wrapped_value, digest, height, is_root))
 
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value + 'x', digest, height, is_root)
+                          wrapped_value + b'x', digest, height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value, digest[:-3] + 'xyz', height, is_root)
+                          wrapped_value, digest[:-3] + b'xyz', height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, is_root)
         try:
@@ -171,9 +173,9 @@ class CryptoWrapperTest(unittest.TestCase):
             value, cw.unwrap_value(wrapped_value, digest, height, is_root))
 
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value + 'x', digest, height, is_root)
+                          wrapped_value + b'x', digest, height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value, digest[:-3] + 'xyz', height, is_root)
+                          wrapped_value, digest[:-3] + b'xyz', height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
@@ -205,9 +207,9 @@ class CryptoWrapperTest(unittest.TestCase):
             value, cw.unwrap_value(wrapped_value, digest, height, is_root, len(value)))
 
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value + 'x', digest, height, is_root)
+                          wrapped_value + b'x', digest, height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value, digest[:-3] + 'xyz', height, is_root)
+                          wrapped_value, digest[:-3] + b'xyz', height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
@@ -220,7 +222,7 @@ class CryptoWrapperTest(unittest.TestCase):
             seccs.crypto_wrapper.AES_SIV_256
         except AttributeError:
             self.skipTest('AES-SIV support is missing.')
-        
+
         key = os.urandom(32)
         cw = seccs.crypto_wrapper.AES_SIV_256(key)
         key2 = os.urandom(32)
@@ -242,9 +244,9 @@ class CryptoWrapperTest(unittest.TestCase):
             value, cw.unwrap_value(wrapped_value, digest, height, is_root))
 
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value + 'x', digest, height, is_root)
+                          wrapped_value + b'x', digest, height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value, digest[:-3] + 'xyz', height, is_root)
+                          wrapped_value, digest[:-3] + b'xyz', height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, is_root)
         try:
@@ -263,7 +265,7 @@ class CryptoWrapperTest(unittest.TestCase):
             seccs.crypto_wrapper.AES_SIV_256
         except AttributeError:
             self.skipTest('AES-SIV support is missing.')
-            
+
         key = os.urandom(32)
         cw = seccs.crypto_wrapper.AES_SIV_256_DISTINGUISHED_ROOT(key)
         key2 = os.urandom(32)
@@ -285,9 +287,9 @@ class CryptoWrapperTest(unittest.TestCase):
             value, cw.unwrap_value(wrapped_value, digest, height, is_root))
 
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value + 'x', digest, height, is_root)
+                          wrapped_value + b'x', digest, height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value, digest[:-3] + 'xyz', height, is_root)
+                          wrapped_value, digest[:-3] + b'xyz', height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
@@ -326,8 +328,8 @@ class SecCSLiteTest(unittest.TestCase):
         self.digest_size = crypto_wrapper.DIGEST_SIZE
 
         ''' functions that provide storage consumption information '''
-        self.kvs_size = lambda: reduce(
-            lambda size, (key, value): size + len(key) + len(value), kvs.items(), 0)
+        self.kvs_size = lambda: functools.reduce(
+            lambda size, kv: size + len(kv[0]) + len(kv[1]), kvs.items(), 0)
         self.kvs_count = lambda: len(kvs)
         self.rc_count = lambda: len(ref_kvs)
 
@@ -375,8 +377,8 @@ class SecCSLiteTest(unittest.TestCase):
 
         ''' verify that contents up to the average chunk size are stored in a single chunk '''
         for content_length in range(0, self.S + 1):
-            content = ''.join(chr(self.random.randint(0, 255))
-                              for _ in range(content_length))
+            content = bytes([self.random.randint(0, 255)
+                             for _ in range(content_length)])
             self.seccs.put_content(content)
 
             kvs_size += content_length + self.digest_size
@@ -388,8 +390,8 @@ class SecCSLiteTest(unittest.TestCase):
             self.assertEqual(self.rc_count(), rc_count)
 
         ''' verify that contents beyond the average chunk size are stored in more than one chunk '''
-        content = ''.join(chr(self.random.randint(0, 255))
-                          for _ in range(self.S + 1))
+        content = b''.join(bytes([self.random.randint(0, 255)])
+                           for _ in range(self.S + 1))
         self.seccs.put_content(content)
 
         kvs_size += content_length + self.digest_size
@@ -419,8 +421,8 @@ class SecCSLiteTest(unittest.TestCase):
             expected_costs = (content_length / self.S) * (self.S +
                                                           self.digest_size) * 2  # storage for leaf chunks times two
             for _ in range(10):
-                content = ''.join(chr(self.random.randint(0, 255))
-                                  for _ in range(content_length))
+                content = bytes([self.random.randint(0, 255)
+                                 for _ in range(content_length)])
                 self.seccs.put_content(content)
 
                 kvs_size += 4 * expected_costs
@@ -454,20 +456,20 @@ class SecCSLiteTest(unittest.TestCase):
 
             ''' choose random d '''
             d = self.random.randint(
-                1, content_length / 10 + 1)  # should be at least an order of magnitude less than the length
+                1, content_length // 10 + 1)  # should be at least an order of magnitude less than the length
 
             increase_size = 0
             expected_increase = 0
 
             ''' average over 10 runs '''
             for _ in range(10):
-                content = ''.join(chr(self.random.randint(0, 255))
-                                  for _ in range(content_length))
+                content = bytes([self.random.randint(0, 255)
+                                 for _ in range(content_length)])
                 self.seccs.put_content(content)
                 kvs_size = self.kvs_size()
 
-                content = ''.join([content[:offset], ''.join(
-                    chr(self.random.randint(0, 255)) for _ in range(d)), content[offset + d:]])
+                content = b''.join([content[:offset], bytes(
+                    [self.random.randint(0, 255) for _ in range(d)]), content[offset + d:]])
                 self.seccs.put_content(content)
 
                 increase_size += self.kvs_size() - kvs_size
@@ -488,8 +490,8 @@ class SecCSLiteTest(unittest.TestCase):
     def test_small_retrievals(self):
         ''' verify contents up to the average chunk size that are stored in a single chunk '''
         for content_length in range(0, self.S + 1):
-            content = ''.join(chr(self.random.randint(0, 255))
-                              for _ in range(content_length))
+            content = bytes([self.random.randint(0, 255)
+                             for _ in range(content_length)])
             k = self.seccs.put_content(content)
 
             m = self.seccs.get_content(k)
@@ -502,8 +504,8 @@ class SecCSLiteTest(unittest.TestCase):
             content_length = self.random.randint(
                 int(self.S * (self.S / self.R)**(chunking_levels - 1)), int(self.S * (self.S / self.R)**(chunking_levels)))
 
-            content = ''.join(chr(self.random.randint(0, 255))
-                              for _ in range(content_length))
+            content = bytes([self.random.randint(0, 255)
+                             for _ in range(content_length)])
             k = self.seccs.put_content(content)
 
             m = self.seccs.get_content(k)
@@ -528,8 +530,8 @@ class SecCSLiteTest(unittest.TestCase):
             content_length = self.random.randint(
                 int(self.S * (self.S / self.R)**(chunking_levels - 1)), int(self.S * (self.S / self.R)**(chunking_levels)))
 
-            content = ''.join(chr(self.random.randint(0, 255))
-                              for _ in range(content_length))
+            content = bytes([self.random.randint(0, 255)
+                             for _ in range(content_length)])
 
             ''' insert and delete immediately afterwards '''
             k = self.seccs.put_content(content)
@@ -546,8 +548,8 @@ class SecCSLiteTest(unittest.TestCase):
         ref_kvs_empty = dict(self.ref_kvs)
 
         ''' insert some content and record data structure state '''
-        content_a = ''.join(chr(self.random.randint(0, 255))
-                            for _ in range(2 * 1024 * 1024))
+        content_a = bytes([self.random.randint(0, 255)
+                           for _ in range(2 * 1024 * 1024)])
         k_a = self.seccs.put_content(content_a)
 
         kvs_with_a = dict(self.kvs)
@@ -559,8 +561,8 @@ class SecCSLiteTest(unittest.TestCase):
         self.assertEqual(self.ref_kvs, ref_kvs_empty)
 
         ''' insert some content b, then a, then delete b '''
-        content_b = ''.join(chr(self.random.randint(0, 255))
-                            for _ in range(2 * 1024 * 1024))
+        content_b = bytes([self.random.randint(0, 255)
+                           for _ in range(2 * 1024 * 1024)])
         k_b = self.seccs.put_content(content_b)
 
         self.seccs.put_content(content_a)
@@ -579,8 +581,8 @@ class SecCSLiteTest(unittest.TestCase):
         ref_kvs_empty = dict(self.ref_kvs)
 
         ''' insert some content and record data structure state '''
-        content_a = ''.join(chr(self.random.randint(0, 255))
-                            for _ in range(2 * 1024 * 1024))
+        content_a = bytes([self.random.randint(0, 255)
+                           for _ in range(2 * 1024 * 1024)])
         k_a = self.seccs.put_content(content_a)
 
         kvs_with_a = dict(self.kvs)
@@ -593,9 +595,9 @@ class SecCSLiteTest(unittest.TestCase):
 
         ''' insert some content b, then a, then delete b '''
         offset = self.random.randint(0, len(content_a))
-        d = self.random.randint(1, len(content_a) / 10 + 1)
-        content_b = ''.join([content_a[:offset], ''.join(
-            chr(self.random.randint(0, 255)) for _ in range(d)), content_a[offset + d:]])
+        d = self.random.randint(1, len(content_a) // 10 + 1)
+        content_b = b''.join([content_a[:offset], bytes(
+            [self.random.randint(0, 255) for _ in range(d)]), content_a[offset + d:]])
         k_b = self.seccs.put_content(content_b)
 
         self.seccs.put_content(content_a)
@@ -619,8 +621,8 @@ class SecCSLiteTest(unittest.TestCase):
             content_length = self.random.randint(
                 int(self.S * (self.S / self.R)**(chunking_levels - 1)), int(self.S * (self.S / self.R)**(chunking_levels)))
 
-            content = ''.join(chr(self.random.randint(0, 255))
-                              for _ in range(content_length))
+            content = bytes([self.random.randint(0, 255)
+                             for _ in range(content_length)])
 
             ''' insert and delete immediately afterwards '''
             k = self.seccs.put_content(content)
@@ -642,8 +644,8 @@ class SecCSLiteTest(unittest.TestCase):
         ref_kvs_empty = dict(self.ref_kvs)
 
         ''' insert some content and record data structure state '''
-        content_a = ''.join(chr(self.random.randint(0, 255))
-                            for _ in range(2 * 1024 * 1024))
+        content_a = bytes([self.random.randint(0, 255)
+                           for _ in range(2 * 1024 * 1024)])
         k_a = self.seccs.put_content(content_a)
 
         kvs_with_a = dict(self.kvs)
