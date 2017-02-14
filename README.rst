@@ -40,7 +40,7 @@ being incompatible to Python 3.5. To resolve this issue, install the latest
 ::
 
 	$ pip uninstall pybindgen
-    $ pip install git+https://github.com/gjcarneiro/pybindgen.git
+	$ pip install git+https://github.com/gjcarneiro/pybindgen.git
 
 Usage and Overview
 ------------------
