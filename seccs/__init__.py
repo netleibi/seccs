@@ -40,7 +40,7 @@ import struct
 import seccs.crypto_wrapper
 import seccs.rc
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 
 class UnsupportedChunkSizeError(Exception):
@@ -122,7 +122,7 @@ class SecCSLite(object):
 
           Expected interface:
             value, digest <- wrap_value(value, height, is_root)
-            value <- unwrap_value(value, digest, length, height, is_root)
+            value <- unwrap_value(value, digest, height, is_root, length)
         """
         self._crypto_wrapper = crypto_wrapper
 
@@ -146,7 +146,7 @@ class SecCSLite(object):
         """
         if reference_counter is None:
             reference_counter = seccs.rc.KeySuffixDatabaseReferenceCounter(
-                database, 'r')
+                database, b'r')
         self._reference_counter = reference_counter
 
         """

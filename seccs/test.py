@@ -88,9 +88,9 @@ class CryptoWrapperTest(unittest.TestCase):
                 return super(Test, self).unwrap_value(*args, **kwargs)
 
         cw = Test()
-        self.assertRaises(NotImplementedError, cw.wrap_value, '', 0, False)
+        self.assertRaises(NotImplementedError, cw.wrap_value, b'', 0, False)
         self.assertRaises(
-            NotImplementedError, cw.unwrap_value, '', '', 0, False)
+            NotImplementedError, cw.unwrap_value, b'', b'', 0, False)
 
     def test_SHA_256(self):
         cw = seccs.crypto_wrapper.SHA_256()
@@ -256,9 +256,9 @@ class CryptoWrapperTest(unittest.TestCase):
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, not is_root)
 
-        wrapped_value, digest = cw.wrap_value('', height, is_root)
+        wrapped_value, digest = cw.wrap_value(b'', height, is_root)
         self.assertEqual(
-            '', cw.unwrap_value(wrapped_value, digest, height, is_root))
+            b'', cw.unwrap_value(wrapped_value, digest, height, is_root))
 
     def test_AES_SIV_256_DISTINGUISHED_ROOT(self):
         try:
@@ -297,9 +297,9 @@ class CryptoWrapperTest(unittest.TestCase):
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, not is_root)
 
-        wrapped_value, digest = cw.wrap_value('', height, is_root)
+        wrapped_value, digest = cw.wrap_value(b'', height, is_root)
         self.assertEqual(
-            '', cw.unwrap_value(wrapped_value, digest, height, is_root, 0))
+            b'', cw.unwrap_value(wrapped_value, digest, height, is_root, 0))
 
 
 class SecCSLiteTest(unittest.TestCase):
@@ -310,6 +310,7 @@ class SecCSLiteTest(unittest.TestCase):
         self.random = random.Random(self.seed)
 
         self.S = kwargs.pop('S', 128)
+        self.crypto_wrapper = kwargs.pop('crypto_wrapper', seccs.crypto_wrapper.SHA_256())
 
         unittest.TestCase.__init__(self, *args, **kwargs)
 
@@ -323,8 +324,7 @@ class SecCSLiteTest(unittest.TestCase):
         kvs = dict()
         ref_kvs = dict()
 
-        crypto_wrapper = seccs.crypto_wrapper.SHA_256()
-
+        crypto_wrapper = self.crypto_wrapper
         self.digest_size = crypto_wrapper.DIGEST_SIZE
 
         ''' functions that provide storage consumption information '''
@@ -690,6 +690,12 @@ if __name__ == "__main__":
     for cls in [RCTest, CryptoWrapperTest]:
         for name in unittest.TestLoader().getTestCaseNames(cls):
             suite.addTest(cls(name))
+    
+    # perform one test with leaf padding crypto wrapper
+    for S in CHUNK_SIZES:
+        for name in unittest.TestLoader().getTestCaseNames(SecCSLiteTest):
+            suite.addTest(SecCSLiteTest(name, S=S, crypto_wrapper=seccs.crypto_wrapper.HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(b'0000000000000000')))
+    
     for seed in REQUIRED_SEEDS + [None] * RANDOM_TESTS_COUNT:
         for S in CHUNK_SIZES:
             for name in unittest.TestLoader().getTestCaseNames(SecCSLiteTest):

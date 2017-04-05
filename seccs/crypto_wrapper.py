@@ -337,7 +337,7 @@ else:
     
             See :meth:`.BaseCryptoWrapper.wrap_value`.
             """
-            if value == '':
+            if value == b'':
                 return value, self._zero_digest
             cipher = AES_new_fn(self._key, AES_MODE_SIV)
             cipher.update(struct.pack(FORMAT_HEIGHT, height))
@@ -352,7 +352,7 @@ else:
     
             See :meth:`.BaseCryptoWrapper.unwrap_value`.
             """
-            if value == '' and digest == self._zero_digest:
+            if value == b'' and digest == self._zero_digest:
                 return value
             cipher = AES_new_fn(self._key, AES_MODE_SIV)
             cipher.update(struct.pack(FORMAT_HEIGHT, height))
@@ -395,7 +395,7 @@ else:
     
             See :meth:`.AES_SIV_256.wrap_value`.
             """
-            if value == '':
+            if value == b'':
                 return value, self._zero_digest
             cipher = AES_new_fn(self._key, AES_MODE_SIV)
             cipher.update(struct.pack(FORMAT_HEIGHT_ISROOT, height, is_root))
@@ -410,7 +410,7 @@ else:
     
             See :meth:`.BaseCryptoWrapper.unwrap_value`.
             """
-            if value == '' and digest == self._zero_digest:
+            if value == b'' and digest == self._zero_digest:
                 return value
             cipher = AES_new_fn(self._key, AES_MODE_SIV)
             cipher.update(struct.pack(FORMAT_HEIGHT_ISROOT, height, is_root))
