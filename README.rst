@@ -32,16 +32,6 @@ If you want to use AES-SIV encryption (you probably want!), you also need to ins
 
 	$ pip install https://ftp.dlitz.net/pub/dlitz/crypto/pycrypto/pycrypto-2.7a1.tar.gz
 
-If you are using Python >=3.5, pip might fail to build the package `fastchunking`
-on which `seccs` depends. This is due to the latest `pybindgen` release on PyPI
-being incompatible to Python 3.5. To resolve this issue, install the latest
-`pybindgen` version from github before installing `seccs`:
-
-::
-
-	$ pip uninstall pybindgen
-	$ pip install git+https://github.com/gjcarneiro/pybindgen.git
-
 Usage and Overview
 ------------------
 
