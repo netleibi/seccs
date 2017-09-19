@@ -228,63 +228,63 @@ class HMAC_SHA_256_DISTINGUISHED_ROOT(HMAC_SHA_256):
         return value
 
 
-HMAC_SHA_256_R = HMAC_SHA_256.DIGEST_SIZE + 8
-
-
-class HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(HMAC_SHA_256):
- 
-    """HMAC-SHA-256 crypto wrapper with distinguished root representation and
-    leaf padding.
- 
-    Provides authenticity for chunk tree nodes based on a symmetric 32-bytes key
-    specified during instantiation.
- 
-    Root nodes are handled differently from inner nodes at the same level.
-    
-    WARNING: not yet supported by SecCS!
- 
-    Nodes are represented as follows:
-        * value: <value>
-        * digest: HMAC-SHA-256(<key>, <height> || <is_root> || <value>)
- 
-    Args:
-        key (str): Cryptographic key used for symmetric authentication.
-    """
-     
-    __slots__ = []
- 
-    def __init__(self, key):
-        HMAC_SHA_256.__init__(self, key)
- 
-    def wrap_value(self, value, height, is_root):
-        """Pads leaf node representations with zero bytes to make them
-        indifferentiable from superchunks and uses SHA-256-based HMAC of the
-        resulting node representation, height and is_root flag as digest.
- 
-        See :meth:`.BaseCryptoWrapper.wrap_value`.
-        """
-        m = HMAC_new(self._key, digestmod=HASHLIB_SHA256)
-        m.update(struct.pack(FORMAT_HEIGHT_ISROOT, height, is_root))
-        if height == 0:
-            value += b'\x00' * (HMAC_SHA_256_R - (len(value) % HMAC_SHA_256_R))
-        m.update(value)
-        return value, m.digest()
- 
-    def unwrap_value(self, value, digest, height, is_root, length=-1):
-        """Verifies SHA-256-based HMAC, removes padding and returns resulting
-        node representation on success.
- 
-        Raises:
-            AuthenticityError: If digest does not match.
- 
-        See :meth:`.BaseCryptoWrapper.unwrap_value`.
-        """
-        m = HMAC_new(self._key, digestmod=HASHLIB_SHA256)
-        m.update(struct.pack(FORMAT_HEIGHT_ISROOT, height, is_root))
-        m.update(value)
-        if m.digest() != digest or (height == 0 and len(value) < length):
-            raise AuthenticityError
-        return value[:length] if height == 0 and length > -1 else value
+# HMAC_SHA_256_R = HMAC_SHA_256.DIGEST_SIZE + 8
+# 
+# 
+# class HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(HMAC_SHA_256):
+#  
+#     """HMAC-SHA-256 crypto wrapper with distinguished root representation and
+#     leaf padding.
+#  
+#     Provides authenticity for chunk tree nodes based on a symmetric 32-bytes key
+#     specified during instantiation.
+#  
+#     Root nodes are handled differently from inner nodes at the same level.
+#     
+#     WARNING: not yet supported by SecCS!
+#  
+#     Nodes are represented as follows:
+#         * value: <value>
+#         * digest: HMAC-SHA-256(<key>, <height> || <is_root> || <value>)
+#  
+#     Args:
+#         key (str): Cryptographic key used for symmetric authentication.
+#     """
+#      
+#     __slots__ = []
+#  
+#     def __init__(self, key):
+#         HMAC_SHA_256.__init__(self, key)
+#  
+#     def wrap_value(self, value, height, is_root):
+#         """Pads leaf node representations with zero bytes to make them
+#         indifferentiable from superchunks and uses SHA-256-based HMAC of the
+#         resulting node representation, height and is_root flag as digest.
+#  
+#         See :meth:`.BaseCryptoWrapper.wrap_value`.
+#         """
+#         m = HMAC_new(self._key, digestmod=HASHLIB_SHA256)
+#         m.update(struct.pack(FORMAT_HEIGHT_ISROOT, height, is_root))
+#         if height == 0:
+#             value += b'\x00' * (HMAC_SHA_256_R - (len(value) % HMAC_SHA_256_R))
+#         m.update(value)
+#         return value, m.digest()
+#  
+#     def unwrap_value(self, value, digest, height, is_root, length=-1):
+#         """Verifies SHA-256-based HMAC, removes padding and returns resulting
+#         node representation on success.
+#  
+#         Raises:
+#             AuthenticityError: If digest does not match.
+#  
+#         See :meth:`.BaseCryptoWrapper.unwrap_value`.
+#         """
+#         m = HMAC_new(self._key, digestmod=HASHLIB_SHA256)
+#         m.update(struct.pack(FORMAT_HEIGHT_ISROOT, height, is_root))
+#         m.update(value)
+#         if m.digest() != digest or (height == 0 and len(value) < length):
+#             raise AuthenticityError
+#         return value[:length] if height == 0 and length > -1 else value
 
 
 try:

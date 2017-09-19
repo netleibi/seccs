@@ -183,39 +183,39 @@ class CryptoWrapperTest(unittest.TestCase):
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, not is_root)
 
-    def test_HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(self):
-        key = os.urandom(32)
-        cw = seccs.crypto_wrapper.HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(
-            key)
-        key2 = os.urandom(32)
-        cw2 = seccs.crypto_wrapper.HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(
-            key2)
-
-        value = os.urandom(100)
-        height = 0
-        is_root = False
-
-        wrapped_value, digest = cw.wrap_value(value, height, is_root)
-
-        self.assertNotEqual(
-            (wrapped_value, digest), cw2.wrap_value(value, height, is_root))
-
-        self.assertEqual(value, wrapped_value[:len(value)])
-        self.assertNotEqual(len(value), len(wrapped_value))
-
-        self.assertEqual(
-            value, cw.unwrap_value(wrapped_value, digest, height, is_root, len(value)))
-
-        self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value + b'x', digest, height, is_root)
-        self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value, digest[:-3] + b'xyz', height, is_root)
-        self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value, digest, height + 1, is_root)
-        self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value, digest, height, not is_root)
-        self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
-                          wrapped_value, digest, height + 1, not is_root)
+#     def test_HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(self):
+#         key = os.urandom(32)
+#         cw = seccs.crypto_wrapper.HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(
+#             key)
+#         key2 = os.urandom(32)
+#         cw2 = seccs.crypto_wrapper.HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(
+#             key2)
+# 
+#         value = os.urandom(100)
+#         height = 0
+#         is_root = False
+# 
+#         wrapped_value, digest = cw.wrap_value(value, height, is_root)
+# 
+#         self.assertNotEqual(
+#             (wrapped_value, digest), cw2.wrap_value(value, height, is_root))
+# 
+#         self.assertEqual(value, wrapped_value[:len(value)])
+#         self.assertNotEqual(len(value), len(wrapped_value))
+# 
+#         self.assertEqual(
+#             value, cw.unwrap_value(wrapped_value, digest, height, is_root, len(value)))
+# 
+#         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
+#                           wrapped_value + b'x', digest, height, is_root)
+#         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
+#                           wrapped_value, digest[:-3] + b'xyz', height, is_root)
+#         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
+#                           wrapped_value, digest, height + 1, is_root)
+#         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
+#                           wrapped_value, digest, height, not is_root)
+#         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
+#                           wrapped_value, digest, height + 1, not is_root)
 
     def test_AES_SIV_256(self):
         try:
@@ -485,8 +485,8 @@ class SecCSLiteTest(unittest.TestCase):
     '''
     G3: If any call k = PutContent(m) has been issued before m2 = GetContent(k), then it holds m2 = m or an Exception is raised.
     '''
-    #@unittest.skip("not now")
 
+    #@unittest.skip("not now")
     def test_small_retrievals(self):
         ''' verify contents up to the average chunk size that are stored in a single chunk '''
         for content_length in range(0, self.S + 1):
@@ -691,10 +691,10 @@ if __name__ == "__main__":
         for name in unittest.TestLoader().getTestCaseNames(cls):
             suite.addTest(cls(name))
     
-    # perform one test with leaf padding crypto wrapper
-    for S in CHUNK_SIZES:
-        for name in unittest.TestLoader().getTestCaseNames(SecCSLiteTest):
-            suite.addTest(SecCSLiteTest(name, S=S, crypto_wrapper=seccs.crypto_wrapper.HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(b'0000000000000000')))
+#     # perform one test with leaf padding crypto wrapper
+#     for S in CHUNK_SIZES:
+#         for name in unittest.TestLoader().getTestCaseNames(SecCSLiteTest):
+#             suite.addTest(SecCSLiteTest(name, S=S, crypto_wrapper=seccs.crypto_wrapper.HMAC_SHA_256_DISTINGUISHED_ROOT_WITH_LEAF_PADDING(b'0000000000000000')))
     
     for seed in REQUIRED_SEEDS + [None] * RANDOM_TESTS_COUNT:
         for S in CHUNK_SIZES:
