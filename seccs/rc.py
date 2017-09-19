@@ -6,6 +6,7 @@ class BaseReferenceCounter(object):
 
     """Abstract base class for reference counters."""
     __metaclass__ = abc.ABCMeta
+    __slots__ = []
 
     def inc(self, key):
         """Abstract increment interface.
@@ -37,6 +38,8 @@ class NoReferenceCounter(BaseReferenceCounter):
     Can be used to disable reference counting where a reference counter is
     required.
     """
+
+    __slots__ = []
 
     def inc(self, key):
         """Increment interface.
@@ -70,6 +73,8 @@ class DatabaseReferenceCounter(BaseReferenceCounter):
         database: Database object with a dict-like interface, i.e., implementing
             the operations __getitem__, __setitem__ and __delitem__.
     """
+
+    __slots__ = ['_database']
 
     def __init__(self, database):
         super(DatabaseReferenceCounter, self).__init__()
@@ -112,6 +117,8 @@ class KeySuffixDatabaseReferenceCounter(DatabaseReferenceCounter):
             the operations __getitem__, __setitem__ and __delitem__.
         suffix: Suffix for keys.
     """
+
+    __slots__ = ['_suffix']
 
     def __init__(self, database, suffix):
         super(KeySuffixDatabaseReferenceCounter, self).__init__(database)
