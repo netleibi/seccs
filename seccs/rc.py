@@ -30,6 +30,17 @@ class BaseReferenceCounter(object):
         """
         raise NotImplementedError
 
+    def get(self, key):
+        """Abstract get interface.
+
+        Args:
+            key: Key whose reference counter shall be retrieved.
+
+        Returns:
+            Number of references of key.
+        """
+        raise NotImplementedError
+
 
 class NoReferenceCounter(BaseReferenceCounter):
 
@@ -51,6 +62,14 @@ class NoReferenceCounter(BaseReferenceCounter):
 
     def dec(self, key):
         """Decrement interface.
+
+        Returns:
+            1
+        """
+        return 1
+
+    def get(self, key):
+        """Get interface.
 
         Returns:
             1
@@ -104,6 +123,17 @@ class DatabaseReferenceCounter(BaseReferenceCounter):
             database[key] = new_count
         return new_count
 
+    def get(self, key):
+        """Gets reference counter of key.
+
+        See :meth:`.BaseReferenceCounter.get`.
+        """
+        database = self._database
+        if key in database:
+            return database[key]
+        else:
+            return 0
+
 
 class KeySuffixDatabaseReferenceCounter(DatabaseReferenceCounter):
 
@@ -138,3 +168,10 @@ class KeySuffixDatabaseReferenceCounter(DatabaseReferenceCounter):
         See :meth:`.DatabaseReferenceCounter.dec`.
         """
         return DatabaseReferenceCounter.dec(self, key + self._suffix)
+
+    def get(self, key):
+        """Gets reference counter of key.
+
+        See :meth:`.DatabaseReferenceCounter.get`.
+        """
+        return DatabaseReferenceCounter.get(self, key + self._suffix)

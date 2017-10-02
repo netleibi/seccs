@@ -36,12 +36,14 @@ class RCTest(unittest.TestCase):
         key = os.urandom(32)
         self.assertRaises(NotImplementedError, rc.inc, key)
         self.assertRaises(NotImplementedError, rc.dec, key)
+        self.assertRaises(NotImplementedError, rc.get, key)
 
     def test_no_rc(self):
         rc = seccs.rc.NoReferenceCounter()
         key = os.urandom(32)
         self.assertEqual(rc.inc(key), 1)
         self.assertEqual(rc.dec(key), 1)
+        self.assertEqual(rc.get(key), 1)
 
     def test_database_rc(self):
         database = dict()
@@ -54,8 +56,10 @@ class RCTest(unittest.TestCase):
         self.assertEqual(rc.inc(key), 1)
         self.assertIn(key, database)
         self.assertEqual(rc.inc(key), 2)
+        self.assertEqual(rc.get(key), 2)
         self.assertEqual(rc.dec(key), 1)
         self.assertEqual(rc.dec(key), 0)
+        self.assertEqual(rc.get(key), 0)
         self.assertNotIn(key, database)
 
     def test_key_suffix_database_rc(self):
@@ -71,8 +75,10 @@ class RCTest(unittest.TestCase):
         self.assertNotIn(key, database)
         self.assertIn(key + suffix, database)
         self.assertEqual(rc.inc(key), 2)
+        self.assertEqual(rc.get(key), 2)
         self.assertEqual(rc.dec(key), 1)
         self.assertEqual(rc.dec(key), 0)
+        self.assertEqual(rc.get(key), 0)
         self.assertNotIn(key + suffix, database)
 
 
@@ -112,10 +118,9 @@ class CryptoWrapperTest(unittest.TestCase):
                           wrapped_value, digest[:-3] + b'xyz', height, is_root)
         self.assertRaises(seccs.crypto_wrapper.IntegrityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, is_root)
-        try:
-            cw.unwrap_value(wrapped_value, digest, height, not is_root)
-        except seccs.crypto_wrapper.IntegrityError:
-            self.fail('crypto_wrapper raises IntegrityError unexpectedly')
+        
+        cw.unwrap_value(wrapped_value, digest, height, not is_root)
+        
         self.assertRaises(seccs.crypto_wrapper.IntegrityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, not is_root)
 
@@ -145,10 +150,9 @@ class CryptoWrapperTest(unittest.TestCase):
                           wrapped_value, digest[:-3] + b'xyz', height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, is_root)
-        try:
-            cw.unwrap_value(wrapped_value, digest, height, not is_root)
-        except seccs.crypto_wrapper.AuthenticityError:
-            self.fail('crypto_wrapper raises AuthenticityError unexpectedly')
+
+        cw.unwrap_value(wrapped_value, digest, height, not is_root)
+
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, not is_root)
 
@@ -249,10 +253,9 @@ class CryptoWrapperTest(unittest.TestCase):
                           wrapped_value, digest[:-3] + b'xyz', height, is_root)
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, is_root)
-        try:
-            cw.unwrap_value(wrapped_value, digest, height, not is_root)
-        except seccs.crypto_wrapper.AuthenticityError:
-            self.fail('crypto_wrapper raises AuthenticityError unexpectedly')
+
+        cw.unwrap_value(wrapped_value, digest, height, not is_root)
+
         self.assertRaises(seccs.crypto_wrapper.AuthenticityError, cw.unwrap_value,
                           wrapped_value, digest, height + 1, not is_root)
 
@@ -364,8 +367,8 @@ class SecCSLiteTest(unittest.TestCase):
     '''
     G1: The (expected) increase of the data structure's storage consumption caused by PutContent(m) should be in O(|m|).
     '''
-    #@unittest.skip("not now")
 
+    # @unittest.skip("not now")
     def test_small_inserts(self):
         ''' data structure should be empty at the beginning '''
         kvs_size = self.kvs_size()
@@ -402,7 +405,7 @@ class SecCSLiteTest(unittest.TestCase):
         self.assertGreater(self.kvs_count(), kvs_count)
         self.assertGreater(self.rc_count(), rc_count)
 
-    #@unittest.skip("not now")
+    # @unittest.skip("not now")
     def test_large_inserts(self):
         ''' data structure should be empty at the beginning '''
         kvs_size = self.kvs_size()
@@ -415,10 +418,10 @@ class SecCSLiteTest(unittest.TestCase):
         ''' verify for content lengths of different orders of magnitude '''
         for chunking_levels in range(1, 8):
             content_length = self.random.randint(
-                int(self.S * (self.S / self.R)**(chunking_levels - 1)), int(self.S * (self.S / self.R)**(chunking_levels)))
+                int(self.S * (self.S / self.R) ** (chunking_levels - 1)), int(self.S * (self.S / self.R) ** (chunking_levels)))
 
             ''' averaged over 10 insertions, it is unlikely that a content's storage costs are above four times of its expected storage costs '''
-            expected_costs = (content_length / self.S) * (self.S +
+            expected_costs = (content_length / self.S) * (self.S + 
                                                           self.digest_size) * 2  # storage for leaf chunks times two
             for _ in range(10):
                 content = bytes([self.random.randint(0, 255)
@@ -435,8 +438,8 @@ class SecCSLiteTest(unittest.TestCase):
         is identical to m except for a single sequence of d bytes, the (expected) increase
         in storage consumption caused by PutContent(m) should be in O(d + log|m|).
     '''
-    #@unittest.skip("not now")
 
+    # @unittest.skip("not now")
     def test_similar_contents(self):
         ''' data structure should be empty at the beginning '''
         kvs_size = self.kvs_size()
@@ -449,7 +452,7 @@ class SecCSLiteTest(unittest.TestCase):
         ''' verify for content lengths of different orders of magnitude '''
         for chunking_levels in range(1, 8):
             content_length = self.random.randint(
-                int(self.S * (self.S / self.R)**(chunking_levels - 1)), int(self.S * (self.S / self.R)**(chunking_levels)))
+                int(self.S * (self.S / self.R) ** (chunking_levels - 1)), int(self.S * (self.S / self.R) ** (chunking_levels)))
 
             ''' choose random offset '''
             offset = self.random.randint(0, content_length)
@@ -476,7 +479,7 @@ class SecCSLiteTest(unittest.TestCase):
 
                 ''' calculate expected increase '''
                 expected_increase += 4 * \
-                    ((math.ceil(math.log(content_length / self.S) /
+                    ((math.ceil(math.log(content_length / self.S) / 
                                 math.log(self.S / self.R)) + 1) * (self.S + self.digest_size) + d)
 
             self.assertLess(increase_size, expected_increase)
@@ -486,7 +489,7 @@ class SecCSLiteTest(unittest.TestCase):
     G3: If any call k = PutContent(m) has been issued before m2 = GetContent(k), then it holds m2 = m or an Exception is raised.
     '''
 
-    #@unittest.skip("not now")
+    # @unittest.skip("not now")
     def test_small_retrievals(self):
         ''' verify contents up to the average chunk size that are stored in a single chunk '''
         for content_length in range(0, self.S + 1):
@@ -497,12 +500,12 @@ class SecCSLiteTest(unittest.TestCase):
             m = self.seccs.get_content(k)
             self.assertEqual(m, content)
 
-    #@unittest.skip("not now")
+    # @unittest.skip("not now")
     def test_large_retrievals(self):
         ''' verify for content lengths of different orders of magnitude '''
         for chunking_levels in range(1, 8):
             content_length = self.random.randint(
-                int(self.S * (self.S / self.R)**(chunking_levels - 1)), int(self.S * (self.S / self.R)**(chunking_levels)))
+                int(self.S * (self.S / self.R) ** (chunking_levels - 1)), int(self.S * (self.S / self.R) ** (chunking_levels)))
 
             content = bytes([self.random.randint(0, 255)
                              for _ in range(content_length)])
@@ -516,8 +519,8 @@ class SecCSLiteTest(unittest.TestCase):
     the same state as it would have been if neither that nor the most recent
     PutContent call that returned k had been made.
     '''
-    #@unittest.skip("not now")
 
+    # @unittest.skip("not now")
     def test_simple_immediate_deletion(self):
         ''' verify (insert a, delete a) vs. () '''
 
@@ -528,7 +531,7 @@ class SecCSLiteTest(unittest.TestCase):
         ''' insert and delete contents of lengths of different orders of magnitude '''
         for chunking_levels in range(1, 8):
             content_length = self.random.randint(
-                int(self.S * (self.S / self.R)**(chunking_levels - 1)), int(self.S * (self.S / self.R)**(chunking_levels)))
+                int(self.S * (self.S / self.R) ** (chunking_levels - 1)), int(self.S * (self.S / self.R) ** (chunking_levels)))
 
             content = bytes([self.random.randint(0, 255)
                              for _ in range(content_length)])
@@ -540,7 +543,7 @@ class SecCSLiteTest(unittest.TestCase):
             self.assertEqual(self.kvs, kvs)
             self.assertEqual(self.ref_kvs, ref_kvs)
 
-    #@unittest.skip("not now")
+    # @unittest.skip("not now")
     def test_simple_nonimmediate_deletion(self):
         ''' verify (insert a) vs. (insert b, insert a, delete b) '''
 
@@ -573,7 +576,7 @@ class SecCSLiteTest(unittest.TestCase):
         self.assertEqual(self.kvs, kvs_with_a)
         self.assertEqual(self.ref_kvs, ref_kvs_with_a)
 
-    #@unittest.skip("not now")
+    # @unittest.skip("not now")
     def test_complex_nonimmediate_deletion(self):
         ''' verify (insert a) vs. (insert b, insert a, delete b) with b being a slightly modified version of a '''
 
@@ -608,7 +611,7 @@ class SecCSLiteTest(unittest.TestCase):
         self.assertEqual(self.kvs, kvs_with_a)
         self.assertEqual(self.ref_kvs, ref_kvs_with_a)
 
-    #@unittest.skip("not now")
+    # @unittest.skip("not now")
     def test_multiple_deletion(self):
         ''' verify (insert a, insert a, delete a, delete a) vs. () '''
 
@@ -619,7 +622,7 @@ class SecCSLiteTest(unittest.TestCase):
         ''' insert and delete contents of lengths of different orders of magnitude '''
         for chunking_levels in range(1, 8):
             content_length = self.random.randint(
-                int(self.S * (self.S / self.R)**(chunking_levels - 1)), int(self.S * (self.S / self.R)**(chunking_levels)))
+                int(self.S * (self.S / self.R) ** (chunking_levels - 1)), int(self.S * (self.S / self.R) ** (chunking_levels)))
 
             content = bytes([self.random.randint(0, 255)
                              for _ in range(content_length)])
@@ -636,7 +639,7 @@ class SecCSLiteTest(unittest.TestCase):
             self.assertEqual(self.kvs, kvs)
             self.assertEqual(self.ref_kvs, ref_kvs)
 
-    #@unittest.skip("not now")
+    # @unittest.skip("not now")
     def test_deletion_after_multiple_insertion(self):
         ''' verify (insert a, insert a, delete a) vs. (insert_a) '''
 
