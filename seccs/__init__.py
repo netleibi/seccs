@@ -40,7 +40,7 @@ import struct
 import seccs.crypto_wrapper
 import seccs.rc
 
-__version__ = '0.0.4'
+__version__ = '0.0.5'
 
 
 class UnsupportedChunkSizeError(Exception):
@@ -291,18 +291,18 @@ class SecCSLite(object):
             serialized_chunk, h, h == root_h)
 
         """ if the chunk already exists, verify its integrity and return its identifier """
-        if k in self._database and self._get_node(k, h, root_h) is not None:
-            return ((k, ), False)
+        if k in self._database and self._get_node(k, h, root_h) is not None and self._reference_counter.get(k) > 0:
+            return ((k,), False)
 
         """ if we have a new superchunk, increase reference counters for its children """
         if isinstance(v, list):
-            for (chunk_id, ) in v:
+            for (chunk_id,) in v:
                 self._reference_counter.inc(chunk_id)
 
         """ create the chunk and return its identifier """
         self._database[k] = serialized_chunk
 
-        return ((k, ), True)
+        return ((k,), True)
 
     def _get_node(self, k, h, root_h, l=-1):
         """Retrieve chunk tree node from database.
@@ -432,11 +432,11 @@ class SecCSLite(object):
         Returns:
             Content part.
         """
-        chunks = [(k, )]
+        chunks = [(k,)]
         for height in range(h, 0, -1):
             chunks = chain.from_iterable([self._get_node(k, height, root_h)
-                                          for (k, ) in chunks])
-        return b''.join([self._get_node(k, 0, root_h) for (k, ) in chunks])
+                                          for (k,) in chunks])
+        return b''.join([self._get_node(k, 0, root_h) for (k,) in chunks])
 
     def _delete_content(self, k, h, root_h, l, ignore_rc=True):
         """ Remove reference from content's root node and delete its root node
@@ -467,7 +467,7 @@ class SecCSLite(object):
         """
         if h > 0:
             v = self._get_node(k, h, root_h)
-            for (k_child, ) in v:
+            for (k_child,) in v:
                 if self._reference_counter.dec(k_child) == 0:
                     self._delete_chunk(k_child, h - 1, root_h)
         del self._database[k]
