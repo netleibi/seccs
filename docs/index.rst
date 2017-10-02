@@ -6,7 +6,7 @@ seccs --- the SECure Content Store
 data structure for contents on top of any existing key-value store as provided
 by, e.g., cloud storage providers.
 
-It has been developed as part of the work [LS16]_ at CISPA, Saarland University.
+It has been developed as part of the work [LS17]_ at CISPA, Saarland University.
 
 Contents:
 

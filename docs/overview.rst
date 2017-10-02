@@ -8,7 +8,7 @@ existing database providing a key-value store interface. Thus, it is likewise
 usable with in-memory :class:`dict` objects, persistent databases like
 :class:`ZODB`, and many cloud storage providers.
 
-Its details are described in [LS16]_. In short, it is suitable for usage on
+Its details are described in [LS17]_. In short, it is suitable for usage on
 `untrusted` cloud storage and has the following desirable properties:
 
     * Confidentiality:
@@ -28,7 +28,7 @@ Typical Use Case
 ================
 
 In the most-typical configuration, `sec-cs` chunks its contents hierarchically
-using ML-CDC (see [LS16]_), usually relying on Rabin Karp hashes, and stores the
+using ML-CDC (see [LS17]_), usually relying on Rabin Karp hashes, and stores the
 resulting nodes in a `database` after applying AES-SIV-256 for encryption and
 authentication. From a user perspective, we have to initialize a suitable
 database object and a 32-bytes key first.
@@ -61,7 +61,7 @@ Choice of `crypto wrapper` and instantiation of data structure:
    overhead when storing non-deduplicable contents as fewer nodes have to be
    stored.
    
-   Performance is discussed in detail in [LS16]_. If high redundancy is
+   Performance is discussed in detail in [LS17]_. If high redundancy is
    expected, 256 bytes is typically a good compromise; otherwise, larger chunk
    sizes might be more suitable.
 
@@ -149,6 +149,7 @@ Furthermore, storage space is reclaimed completely when contents are removed:
    well to get actually removed.
 
 References:
-    .. [LS16] Dominik Leibenger and Christoph Sorge (2016). sec-cs: Getting the
-       Most out of Untrusted Cloud Storage.
-       `arXiv:1606.03368 <http://arxiv.org/abs/1606.03368>`_
+    .. [LS17] Dominik Leibenger and Christoph Sorge (2017). sec-cs: Getting the
+       Most out of Untrusted Cloud Storage. In Proceedings of the 42nd IEEE
+       Conference on Local Computer Networks (LCN 2017), 2017.
+       (Preprint: `arXiv:1606.03368 <http://arxiv.org/abs/1606.03368>`_)
